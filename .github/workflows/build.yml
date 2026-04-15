@@ -1,0 +1,82 @@
+name: Build ImmortalWrt for Lenovo T14 (x86_64)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Checkout ImmortalWrt
+      run: git clone --depth 1 --branch v24.10.5 https://github.com/immortalwrt/immortalwrt.git openwrt
+        
+    - name: Prepare files
+      run: |
+        mkdir -p openwrt/files/etc/config
+        cp -r files/* openwrt/files/
+        
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git build-essential libssl-dev libncurses5-dev gawk flex bison libelf-dev zlib1g-dev libncursesw5-dev python3-distutils luajit liblua5.3-dev ccache subversion libzstd-dev device-tree-compiler
+        
+    - name: Update feeds
+      run: |
+        cd openwrt
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+        
+    - name: Configure
+      run: |
+        cd openwrt
+        # x86_64 目标 (适用于 T14 笔记本)
+        echo "CONFIG_TARGET_x86_64=y" > .config
+        echo "CONFIG_TARGET_x86_64_GENERIC=y" >> .config
+        echo "CONFIG_GRUB_IMAGES=y" >> .config
+        echo "CONFIG_EFI_IMAGES=y" >> .config
+        echo "CONFIG_VMDK_IMAGES=y" >> .config
+        
+        # WPA2 PEAP 支持
+        echo "CONFIG_PACKAGE_wpad-openssl=y" >> .config
+        echo "CONFIG_PACKAGE_wpa-supplicant=y" >> .config
+        echo "CONFIG_PACKAGE_wpa-supplicant-mesh-openssl=y" >> .config
+        echo "CONFIG_PACKAGE_hostapd-openssl=y" >> .config
+        
+        # 无线驱动
+        echo "CONFIG_PACKAGE_kmod-iwlwifi=y" >> .config  # Intel WiFi
+        echo "CONFIG_PACKAGE_kmod-mac80211=y" >> .config
+        
+        # LuCI Web界面
+        echo "CONFIG_PACKAGE_luci=y" >> .config
+        echo "CONFIG_PACKAGE_luci-app-wireguard=y" >> .config
+        echo "CONFIG_PACKAGE_luci-app-wol=y" >> .config
+        echo "CONFIG_PACKAGE_luci-theme-bootstrap=y" >> .config
+        
+        # 其他常用
+        echo "CONFIG_PACKAGE_kmod-usb-hid=y" >> .config
+        echo "CONFIG_PACKAGE_usbutils=y" >> .config
+        echo "CONFIG_PACKAGE_pciutils=y" >> .config
+        
+        make defconfig
+        
+    - name: Download
+      run: |
+        cd openwrt
+        make download -j$(nproc)
+        
+    - name: Build
+      run: |
+        cd openwrt
+        make -j$(nproc) V=s
+        
+    - name: Upload firmware
+      uses: actions/upload-artifact@v4
+      with:
+        name: immortalwrt-x64
+        path: openwrt/bin/targets/x86/64
