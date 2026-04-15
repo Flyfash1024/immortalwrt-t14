@@ -56,8 +56,8 @@ EOF
       run: ls -la openwrt/bin/targets/x86/64/*/ 2>/dev/null || echo "No output"
         
     - name: Upload firmware
-      uses: aactions/upload-artifact@v4
-     if: success()
+      if: success()
+      uses: actions/upload-artifact@v4
       with:
         name: immortalwrt-x64
         path: openwrt/bin/targets/x86/64
