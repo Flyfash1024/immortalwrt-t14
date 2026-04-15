@@ -30,16 +30,13 @@ jobs:
     - name: Configure
       run: |
         cd openwrt
-        # 简化的 x86_64 配置
-        cat > .config << 'EOF'
-CONFIG_TARGET_x86_64=y
-CONFIG_TARGET_x86_64_GENERIC=y
-CONFIG_GRUB_IMAGES=y
-CONFIG_EFI_IMAGES=y
-CONFIG_PACKAGE_wpad-openssl=y
-CONFIG_PACKAGE_luci=y
-CONFIG_PACKAGE_luci-theme-bootstrap=y
-EOF
+        echo "CONFIG_TARGET_x86_64=y" > .config
+        echo "CONFIG_TARGET_x86_64_GENERIC=y" >> .config
+        echo "CONFIG_GRUB_IMAGES=y" >> .config
+        echo "CONFIG_EFI_IMAGES=y" >> .config
+        echo "CONFIG_PACKAGE_wpad-openssl=y" >> .config
+        echo "CONFIG_PACKAGE_luci=y" >> .config
+        echo "CONFIG_PACKAGE_luci-theme-bootstrap=y" >> .config
         make defconfig
         
     - name: Download
