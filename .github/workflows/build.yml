@@ -16,17 +16,12 @@ jobs:
     - name: Checkout ImmortalWrt
       run: git clone --depth 1 --branch v24.10.5 https://github.com/immortalwrt/immortalwrt.git openwrt
         
-    - name: Prepare files
-      run: |
-        mkdir -p openwrt/files/etc/config
-        cp -r files/* openwrt/files/
-        
     - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y git build-essential libssl-dev libncurses5-dev gawk flex bison libelf-dev zlib1g-dev libncursesw5-dev python3-distutils luajit liblua5.3-dev ccache subversion libzstd-dev device-tree-compiler
         
-    - name: Update feeds
+    - name: Update feesds
       run: |
         cd openwrt
         ./scripts/feeds update -a
@@ -49,10 +44,10 @@ jobs:
         echo "CONFIG_PACKAGE_hostapd-openssl=y" >> .config
         
         # 无线驱动
-        echo "CONFIG_PACKAGE_kmod-iwlwifi=y" >> .config  # Intel WiFi
+        echo "CONFIG_PACKAGE_kmod-iwlwifi=y" >> .config
         echo "CONFIG_PACKAGE_kmod-mac80211=y" >> .config
         
-        # LuCI Web界面
+       # LuCI Web界面
         echo "CONFIG_PACKAGE_luci=y" >> .config
         echo "CONFIG_PACKAGE_luci-app-wireguard=y" >> .config
         echo "CONFIG_PACKAGE_luci-app-wol=y" >> .config
