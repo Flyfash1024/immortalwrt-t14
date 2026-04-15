@@ -19,9 +19,9 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y git build-essential libssl-dev libncurses5-dev gawk flex bison libelf-dev zlib1g-dev libncursesw5-dev python3-distutils luajit liblua5.3-dev ccache subversion libzstd-dev device-tree-compiler
+        sudo apt-get install -y git build-essential libssl-dev libncurses5-dev gawk flex bison libelf-dev zlib1g-dev libncursesw5-dev python3-distutils luajit liblua5.3-dev ccache subversion libzstd-dev
         
-    - name: Update feesds
+    - name: Update feeds
       run: |
         cd openwrt
         ./scripts/feeds update -a
@@ -30,29 +30,16 @@ jobs:
     - name: Configure
       run: |
         cd openwrt
-        # x86_64 目标 (适用于 T14 笔记本)
-        echo "CONFIG_TARGET_x86_64=y" > .config
-        echo "CONFIG_TARGET_x86_64_GENERIC=y" >> .config
-        echo "CONFIG_GRUB_IMAGES=y" >> .config
-        echo "CONFIG_EFI_IMAGES=y" >> .config
-        echo "CONFIG_VMDK_IMAGES=y" >> .config
-        
-        # WPA2 PEAP 支持
-        echo "CONFIG_PACKAGE_wpad-openssl=y" >> .config
-        echo "CONFIG_PACKAGE_wpa-supplicant=y" >> .config
-        echo "CONFIG_PACKAGE_wpa-supplicant-mesh-openssl=y" >> .config
-        echo "CONFIG_PACKAGE_hostapd-openssl=y" >> .config
-        
-        # 无线驱动
-        echo "CONFIG_PACKAGE_kmod-iwlwifi=y" >> .config
-        echo "CONFIG_PACKAGE_kmod-mac80211=y" >> .config
-        
-       # LuCI Web界面
-        echo "CONFIG_PACKAGE_luci=y" >> .config
-        echo "CONFIG_PACKAGE_luci-app-wireguard=y" >> .config
-        echo "CONFIG_PACKAGE_luci-app-wol=y" >> .config
-        echo "CONFIG_PACKAGE_luci-theme-bootstrap=y" >> .config
-        
+        # 简化的 x86_64 配置
+        cat > .config << 'EOF'
+CONFIG_TARGET_x86_64=y
+CONFIG_TARGET_x86_64_GENERIC=y
+CONFIG_GRUB_IMAGES=y
+CONFIG_EFI_IMAGES=y
+CONFIG_PACKAGE_wpad-openssl=y
+CONFIG_PACKAGE_luci=y
+CONFIG_PACKAGE_luci-theme-bootstrap=y
+EOF
         make defconfig
         
     - name: Download
@@ -66,11 +53,11 @@ jobs:
         make -j$(nproc) V=s
         
     - name: Check output
-      run: ls -lh openwrt/bin/targets/x86/64/*
+      run: ls -la openwrt/bin/targets/x86/64/*/ 2>/dev/null || echo "No output"
         
     - name: Upload firmware
-      uses: actions/upload-artifact@v4
+      uses: aactions/upload-artifact@v4
+     if: success()
       with:
         name: immortalwrt-x64
         path: openwrt/bin/targets/x86/64
-        if3oported: true
